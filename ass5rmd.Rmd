@@ -1,0 +1,103 @@
+# Assignment 2 - Course 5 in Data Science Specialization
+
+Load data
+```{r loaddata}
+wd = "C:/Users/areddington/OneDrive - Deloitte (O365D)/R_dir_DS_specialization/Course5/Ass2"
+setwd(wd)
+
+data <- read.csv("activity.csv", header = TRUE)
+```
+
+## Question 1: What is the mean total number of steps taken per day?
+Mean total number of steps calculation (ignore missing values)
+```{r q1}
+mean_steps <- with(data, tapply(steps, as.factor(data$date), sum, na.rm = TRUE))
+```
+
+Histogram
+```{r histo}
+library(ggplot2)
+qplot(mean_steps, main = "Total number of steps per day", xlab="Number of steps", ylab='Frequency', binwidth=1500)
+
+```
+
+A summary (including mean and median) of the total number of steps taken per day:
+```{r meanetc}
+summary(mean_steps)
+```
+
+## Question 2: What is the average daily activity pattern?
+
+Get rid of missing values
+```{r actpattern}
+data_nona <- data[!is.na(data$steps),]
+avg_steps_per_timestep <- with(data_nona, tapply(steps, data_nona$interval, mean))
+time_steps <- levels(as.factor(data_nona$interval))
+
+```
+
+time series plot
+```{r plotsteps}
+plot(time_steps, avg_steps_per_timestep, type='l', col=1, main = "Average daily activity pattern", xlab = "Time intervals", ylab = "Number of steps taken on average")
+```
+
+The maximum steps are taken at this interval:
+```{r maxsteps}
+maxsteps = which.max(avg_steps_per_timestep)
+maxsteps[1]
+```
+
+## Imputing missing values
+
+Calculate and report the total number of missing values in the dataset
+```{r na}
+length(which(is.na(data$steps)))
+```
+
+Strategy for filling in all of the missing values in the dataset & create a new dataset that is equal to the original dataset but with the missing data filled in
+```{r newset}
+meansteps <- with(data_nona, tapply(steps, data_nona$interval, mean))
+data2 <- data[is.na(data$steps),]
+data2$steps <- meansteps
+
+data_imputed <- rbind(data_nona, data2)
+# data_imputed <- data_imputed[order(data_imputed$date), ]
+
+```
+Make histogram of number of steps for day with new data set
+```{r hist}
+steps2 <- with(data_imputed, tapply(steps, as.factor(data_imputed[order(data_imputed$date), ]$date), sum))
+library(ggplot2)
+qplot(steps2, main = "Total number of steps per day", xlab="Number of steps", ylab='Frequency', binwidth=1500)
+```
+Report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment?
+
+Summary of original data (including mean and median):
+```{r report}
+summary(mean_steps)
+```
+Summary of imputed data (including mean and median):
+```{r report2}
+summary(steps2)
+```
+The effect of imputing the data on the mean is that both the mean and median of the data are increased.
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+Making a new factor variable in the imputed data with two levels: Weekday and weekend
+```{r detweek}
+data_imputed$dateType <-  ifelse(as.POSIXlt(data_imputed$date)$wday %in% c(0,6), 'weekend', 'weekday')
+```
+Panel plot containing a time series plot of steps taken on weekdays or during the weekend
+```{r plotpanel}
+stepsimpute <- aggregate(steps ~ interval+dateType, data_imputed, mean)
+
+gg <- ggplot(stepsimpute, aes(interval, steps)) +
+    geom_line(stat = "identity", aes(colour = dateType)) +
+    theme_gray() +
+    facet_grid(dateType ~ ., scales="fixed", space="fixed") +
+    labs(x="Interval", y=expression("No of Steps")) +
+    ggtitle("No of steps Per Interval by day type")
+print(gg)
+```
