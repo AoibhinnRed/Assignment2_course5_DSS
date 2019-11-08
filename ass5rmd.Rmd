@@ -1,6 +1,6 @@
 # Assignment 2 - Course 5 in Data Science Specialization
 
-Load data
+Load data:
 ```{r loaddata}
 wd = "C:/Users/areddington/OneDrive - Deloitte (O365D)/R_dir_DS_specialization/Course5/Ass2"
 setwd(wd)
@@ -14,7 +14,7 @@ Mean total number of steps calculation (ignore missing values)
 mean_steps <- with(data, tapply(steps, as.factor(data$date), sum, na.rm = TRUE))
 ```
 
-Histogram
+Plot histogram of the steps
 ```{r histo}
 library(ggplot2)
 qplot(mean_steps, main = "Total number of steps per day", xlab="Number of steps", ylab='Frequency', binwidth=1500)
@@ -28,7 +28,7 @@ summary(mean_steps)
 
 ## Question 2: What is the average daily activity pattern?
 
-Get rid of missing values
+Get rid of missing values:
 ```{r actpattern}
 data_nona <- data[!is.na(data$steps),]
 avg_steps_per_timestep <- with(data_nona, tapply(steps, data_nona$interval, mean))
@@ -36,7 +36,7 @@ time_steps <- levels(as.factor(data_nona$interval))
 
 ```
 
-time series plot
+Time series plot:
 ```{r plotsteps}
 plot(time_steps, avg_steps_per_timestep, type='l', col=1, main = "Average daily activity pattern", xlab = "Time intervals", ylab = "Number of steps taken on average")
 ```
@@ -47,7 +47,7 @@ maxsteps = which.max(avg_steps_per_timestep)
 maxsteps[1]
 ```
 
-## Imputing missing values
+## Question 3: Imputing missing values
 
 Calculate and report the total number of missing values in the dataset
 ```{r na}
@@ -70,6 +70,7 @@ steps2 <- with(data_imputed, tapply(steps, as.factor(data_imputed[order(data_imp
 library(ggplot2)
 qplot(steps2, main = "Total number of steps per day", xlab="Number of steps", ylab='Frequency', binwidth=1500)
 ```
+
 Report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment?
 
 Summary of original data (including mean and median):
@@ -83,7 +84,7 @@ summary(steps2)
 The effect of imputing the data on the mean is that both the mean and median of the data are increased.
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Questions 4: Are there differences in activity patterns between weekdays and weekends?
 
 Making a new factor variable in the imputed data with two levels: Weekday and weekend
 ```{r detweek}
@@ -94,10 +95,10 @@ Panel plot containing a time series plot of steps taken on weekdays or during th
 stepsimpute <- aggregate(steps ~ interval+dateType, data_imputed, mean)
 
 gg <- ggplot(stepsimpute, aes(interval, steps)) +
+      theme_gray() +
     geom_line(stat = "identity", aes(colour = dateType)) +
-    theme_gray() +
     facet_grid(dateType ~ ., scales="fixed", space="fixed") +
-    labs(x="Interval", y=expression("No of Steps")) +
-    ggtitle("No of steps Per Interval by day type")
+    labs(x="Time step", y=expression("Steps")) +
+    ggtitle("Steps during the week and in the weekend")
 print(gg)
 ```
